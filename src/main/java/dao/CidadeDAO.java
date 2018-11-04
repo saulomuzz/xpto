@@ -5,7 +5,11 @@
  */
 package dao;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
+import controller.Global;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -61,6 +65,27 @@ public class CidadeDAO {
         } catch (SQLException ex) {
             //Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);
             cidade.setEx(ex);
+            retorno = false;
+        }
+
+        return retorno;
+
+    }
+
+    public boolean excluir(Cidade cidade) {
+        String sql = "DELETE FROM tb_cidade where int_id_ibge=?";
+        Boolean retorno = false;
+        PreparedStatement pst = Conexao.getPreparedStatement(sql);
+        try {
+
+            pst.setInt(1, cidade.getInt_id_ibge());
+            if (pst.executeUpdate() > 0) {
+                retorno = true;
+            }
+
+        } catch (SQLException ex) {
+            cidade.setEx(ex);
+            Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);
             retorno = false;
         }
 
@@ -134,11 +159,11 @@ public class CidadeDAO {
             ResultSet res = pst.executeQuery();
 
             if (res.next()) {
-                 retorno = new Cidade();
+                retorno = new Cidade();
                 retorno.setIdtb_cidade(res.getInt("idtb_cidade"));
                 retorno.setIdtb_estado(res.getInt("idtb_estado"));
                 retorno.setInt_id_ibge(res.getInt("int_id_ibge"));
-                retorno.setVar_desc("var_desc");
+                retorno.setVar_desc(res.getString("var_desc"));
                 retorno.setBool_capital(res.getBoolean("bool_capital"));
                 retorno.setVar_desc_no_accents(res.getString("var_desc_no_accents"));
                 retorno.setVar_desc_alternativa(res.getString("var_desc_alternativa"));
@@ -155,4 +180,69 @@ public class CidadeDAO {
 
         return retorno;
     }
+
+    public String getDistancia() {
+        String sql = "SELECT * FROM tb_cidade";
+        List<Cidade> cidadeX = new ArrayList<Cidade>();
+        List<Cidade> cidadeY = new ArrayList<Cidade>();
+        JsonObject auxJSON = new JsonObject();
+        JsonArray retornoJSON = new JsonArray();
+        EstadoDAO estadoDAO = new EstadoDAO();
+        Gson gson = new Gson();
+
+        double kmMax = 0;
+
+        Cidade cX = new Cidade();
+        Cidade cY = new Cidade();
+
+        PreparedStatement pst = Conexao.getPreparedStatement(sql);
+        try {
+
+            ResultSet res = pst.executeQuery();
+
+            while (res.next()) {
+                Cidade c = new Cidade();
+                c.setIdtb_cidade(res.getInt("idtb_cidade"));
+                c.setIdtb_estado(res.getInt("idtb_estado"));
+                c.setInt_id_ibge(res.getInt("int_id_ibge"));
+                c.setVar_desc(res.getString("var_desc"));
+                c.setBool_capital(res.getBoolean("bool_capital"));
+                c.setVar_desc_no_accents(res.getString("var_desc_no_accents"));
+                c.setVar_desc_alternativa(res.getString("var_desc_alternativa"));
+                c.setVar_microregiao(res.getString("var_microregiao"));
+                c.setVar_mesoregiao(res.getString("var_mesoregiao"));
+                c.setDec_lon(res.getDouble("dec_lon"));
+                c.setDec_lat(res.getDouble("dec_lat"));
+                cidadeX.add(c);
+                cidadeY.add(c);
+            }
+
+            for (Cidade eX : cidadeX) {
+                for (Cidade eY : cidadeY) {
+                    double dist = Global.distance(eX.getDec_lat(), eX.getDec_lon(), eY.getDec_lat(), eY.getDec_lon(), "K");
+                    if (kmMax < dist) {
+                        cX = eX;
+                        cY = eY;
+                        kmMax = dist;
+                        
+                    }
+                }
+            }
+            
+            auxJSON.addProperty("descCx", cX.getVar_desc());
+            auxJSON.addProperty("descNoAssCx", cX.getVar_desc_no_accents());
+            auxJSON.addProperty("ufCx", estadoDAO.getUf(cX.getIdtb_estado()));
+            auxJSON.addProperty("descCy", cY.getVar_desc());
+            auxJSON.addProperty("ufCy", estadoDAO.getUf(cY.getIdtb_estado()));
+            auxJSON.addProperty("descNoAssCy", cY.getVar_desc_no_accents());
+            auxJSON.addProperty("distancia", kmMax);
+            retornoJSON.add(auxJSON);
+
+        } catch (SQLException ex) {
+            Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return gson.toJson(retornoJSON);
+    }
+
 }

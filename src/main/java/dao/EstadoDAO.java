@@ -303,6 +303,11 @@ public class EstadoDAO {
 
     }
 
+    /**
+     *
+     * @param uf
+     * @return id
+     */
     public int getIdEstado(String uf) {
 
         String sql = "SELECT * FROM tb_estado where var_uf like ?";
@@ -333,4 +338,26 @@ public class EstadoDAO {
         return idEstado;
     }
 
+    public String getUf(int idEstado) {
+        String sql = "SELECT * FROM tb_estado where idtb_estado = ?";
+        String retorno = "";
+
+        PreparedStatement pst = Conexao.getPreparedStatement(sql);
+        try {
+
+            pst.setInt(1, idEstado);
+            ResultSet res = pst.executeQuery();
+
+            if (res.next()) {
+
+                retorno = res.getString("var_uf");
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+
+        return retorno;
+    }
 }

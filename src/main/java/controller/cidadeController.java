@@ -6,6 +6,8 @@
 package controller;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import dao.CidadeDAO;
 import dao.EstadoDAO;
 import java.io.BufferedReader;
@@ -15,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import model.Cidade;
-import model.Retorno;
 
 /**
  *
@@ -26,6 +27,9 @@ public class cidadeController {
     public String processaCSV(String dir) {
         List<Cidade> cidadeOK = new ArrayList<Cidade>();
         List<Cidade> cidadeErro = new ArrayList<Cidade>();
+        JsonArray retornoJSON = new JsonArray();
+        Gson gson = new Gson();
+        JsonObject auxJSON = new JsonObject();
         BufferedReader br = null;
         String linha = "";
         String csvDivisor = ",";
@@ -72,25 +76,29 @@ public class cidadeController {
                 }
             }
         }
-        String retorno;
-        Gson gson = new Gson();
-        Retorno r = new Retorno();
-        r.setMensagem(cidadeOK.size() + " Registro inseridos com sucesso.");
-        r.setTipo("OK!");
-        retorno = gson.toJson(r);
 
-        r.setMensagem(cidadeErro.size() + " Registro com Erro.");
-        r.setTipo("ERRO!");
-        retorno += "," + gson.toJson(r);
+        auxJSON.addProperty("regOK", cidadeOK.size());
+        auxJSON.addProperty("msgOK", "Registro(s) inserido(s) com sucesso");
+        retornoJSON.add(auxJSON);
+        auxJSON = new JsonObject();
+        auxJSON.addProperty("regNOK", cidadeErro.size());
+        auxJSON.addProperty("msgNOK", "Registro(s) com Erro");
+        retornoJSON.add(auxJSON);
+
+        int tmp = 1;
 
         for (Cidade e : cidadeErro) {
-            r.setTipo("REG!");
+            auxJSON = new JsonObject();
+            auxJSON.addProperty("reg", tmp);
+            auxJSON.addProperty("varDesc", e.getVar_desc());
+            auxJSON.addProperty("int_id_ibge", e.getInt_id_ibge());
+            auxJSON.addProperty("exception", e.getEx().getMessage());
+            retornoJSON.add(auxJSON);
+            tmp++;
 
-            r.setMensagem("{varDesc:" + e.getVar_desc() + "int_id_ibge:" + e.getInt_id_ibge() + "Exception:" + e.getEx().getMessage() + "}");
-            retorno += "," + gson.toJson(r);
         }
 
-        return retorno;
+        return gson.toJson(auxJSON);
     }
 
 }
