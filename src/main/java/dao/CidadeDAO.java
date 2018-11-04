@@ -224,11 +224,11 @@ public class CidadeDAO {
                         cX = eX;
                         cY = eY;
                         kmMax = dist;
-                        
+
                     }
                 }
             }
-            
+
             auxJSON.addProperty("descCx", cX.getVar_desc());
             auxJSON.addProperty("descNoAssCx", cX.getVar_desc_no_accents());
             auxJSON.addProperty("ufCx", estadoDAO.getUf(cX.getIdtb_estado()));
@@ -237,6 +237,85 @@ public class CidadeDAO {
             auxJSON.addProperty("descNoAssCy", cY.getVar_desc_no_accents());
             auxJSON.addProperty("distancia", kmMax);
             retornoJSON.add(auxJSON);
+
+        } catch (SQLException ex) {
+            Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return gson.toJson(retornoJSON);
+    }
+
+    public List<Cidade> getFiltro(String coluna, String filtro, String operador) {
+        String sql = "SELECT * FROM tb_de_para WHERE de like ?";
+
+        filtro = filtro.replace("*", "%");
+        EstadoDAO estadoDAO = new EstadoDAO();
+        List<Cidade> c = new ArrayList<Cidade>();
+        Gson gson = new Gson();
+
+        PreparedStatement pst = Conexao.getPreparedStatement(sql);
+        try {
+            pst.setString(1, coluna);
+            ResultSet res = pst.executeQuery();
+
+            if (res.next()) {
+                sql = "SELECT * FROM tb_cidade WHERE " + res.getString("para") + " " + operador + " ?";
+
+                pst = Conexao.getPreparedStatement(sql);
+                pst.setString(1, filtro);
+                res = pst.executeQuery();
+
+                while (res.next()) {
+                    Cidade cidade = new Cidade();
+                    cidade.setIdtb_cidade(res.getInt("idtb_cidade"));
+                    cidade.setIdtb_estado(res.getInt("idtb_estado"));
+                    cidade.setVar_uf(estadoDAO.getUf(res.getInt("idtb_estado")));
+                    cidade.setInt_id_ibge(res.getInt("int_id_ibge"));
+                    cidade.setVar_desc(res.getString("var_desc"));
+                    cidade.setBool_capital(res.getBoolean("bool_capital"));
+                    cidade.setVar_desc_no_accents(res.getString("var_desc_no_accents"));
+                    cidade.setVar_desc_alternativa(res.getString("var_desc_alternativa"));
+                    cidade.setVar_microregiao(res.getString("var_microregiao"));
+                    cidade.setVar_mesoregiao(res.getString("var_mesoregiao"));
+                    cidade.setDec_lon(res.getDouble("dec_lon"));
+                    cidade.setDec_lat(res.getDouble("dec_lat"));
+                    c.add(cidade);
+                }
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return c;
+    }
+
+    public String getQtdReg(String coluna) {
+        String sql = "SELECT * FROM tb_de_para WHERE de like ?";
+        String dbColuna;
+        JsonObject auxJSON = new JsonObject();
+        JsonArray retornoJSON = new JsonArray();
+        Gson gson = new Gson();
+
+        PreparedStatement pst = Conexao.getPreparedStatement(sql);
+        try {
+            pst.setString(1, coluna);
+            ResultSet res = pst.executeQuery();
+
+            if (res.next()) {
+                sql = "SELECT COUNT(DISTINCT "+res.getNString("para")+" ) as qtd FROM tb_cidade";
+                dbColuna = res.getString("para");
+                pst = Conexao.getPreparedStatement(sql);
+
+                res = pst.executeQuery();
+
+                if (res.next()) {
+                    auxJSON.addProperty("dbColuna", dbColuna);
+                    auxJSON.addProperty("cvsColuna", coluna);
+                    auxJSON.addProperty("qtdReg", res.getString("qtd"));
+                    retornoJSON.add(auxJSON);
+                }
+            }
 
         } catch (SQLException ex) {
             Logger.getLogger(EstadoDAO.class.getName()).log(Level.SEVERE, null, ex);

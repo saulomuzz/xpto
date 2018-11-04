@@ -254,6 +254,42 @@ public class JerseyService {
     }
 
     /**
+     * 9 - Permitir selecionar uma coluna (do CSV) e através dela entrar com uma
+     * string para filtrar. retornar assim todos os objetos que contenham tal
+     * string;
+     *
+     * @return String
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/cidade/filtrar/{coluna}/{filtro}/{operador}")
+    public String filtrar(@PathParam("coluna") String coluna,
+            @PathParam("filtro") String filtro,
+            @PathParam("operador") String operador) {
+
+        CidadeDAO cidadeDAO = new CidadeDAO();
+        Gson gson = new Gson();
+
+        return gson.toJson(cidadeDAO.getFiltro(coluna, filtro, operador));
+    }
+
+    /**
+     * 10 - Retornar a quantidade de registro baseado em uma coluna. Não deve
+     * contar itens iguais; string;
+     *
+     * @return String
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/cidade/qtdReg/{coluna}")
+    public String getQtdReg(@PathParam("coluna") String coluna) {
+
+        CidadeDAO cidadeDAO = new CidadeDAO();
+
+        return cidadeDAO.getQtdReg(coluna);
+    }
+
+    /**
      * 11 - Retornar a quantidade de registros total;
      *
      *
@@ -274,7 +310,8 @@ public class JerseyService {
     }
 
     /**
-     * 12 - Dentre todas as cidades, obter as duas cidades mais distantes uma da outra com base na localização (distância em KM em linha reta);
+     * 12 - Dentre todas as cidades, obter as duas cidades mais distantes uma da
+     * outra com base na localização (distância em KM em linha reta);
      *
      *
      * @return String
@@ -333,8 +370,6 @@ public class JerseyService {
         return gson.toJson(listaEstado);
 
     }
-
-   
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

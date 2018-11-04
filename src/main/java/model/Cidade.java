@@ -25,6 +25,15 @@ public class Cidade {
     private Double dec_lon;
     private Double dec_lat;
     private Exception ex;
+    private String var_uf;
+
+    public String getVar_uf() {
+        return var_uf;
+    }
+
+    public void setVar_uf(String var_uf) {
+        this.var_uf = var_uf;
+    }
 
     public Exception getEx() {
         return ex;
