@@ -252,7 +252,10 @@ public class CidadeDAO {
         EstadoDAO estadoDAO = new EstadoDAO();
         List<Cidade> c = new ArrayList<Cidade>();
         Gson gson = new Gson();
-
+        if(coluna.equals("uf")){
+            filtro = String.valueOf(estadoDAO.getIdEstado(filtro));
+        }
+        
         PreparedStatement pst = Conexao.getPreparedStatement(sql);
         try {
             pst.setString(1, coluna);

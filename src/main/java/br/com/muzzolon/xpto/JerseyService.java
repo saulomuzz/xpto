@@ -153,13 +153,22 @@ public class JerseyService {
 
     /**
      * 7 - Permitir adicionar uma nova Cidade;
-     *
-     *
-     * @return String
+     * 
+     * @param ibge_id
+     * @param uf
+     * @param name
+     * @param capital
+     * @param lon
+     * @param lat
+     * @param alternative_names
+     * @param microregion
+     * @param mesoregion
+     * @return JSOn
      */
+    
     @POST
     @Path("/cidade/insert")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String insertCidade(@FormDataParam("ibge_id") String ibge_id,
             @FormDataParam("uf") String uf,
